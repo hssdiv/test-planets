@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Dimensions, View, ViewStyle } from 'react-native';
+import { Dimensions, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDecay, withTiming } from 'react-native-reanimated';
 
 
 export default function HomeScreen() {
@@ -10,28 +10,54 @@ export default function HomeScreen() {
 
   const systemAnimation = useAnimatedStyle(() => ({
     transform: [
-      { rotateZ: withTiming(`${systemRotation.value + systemOffset.value}deg`, { duration: 100 }) },
-      // { scale:}
+      { rotateZ: withTiming(`${(systemRotation.value + systemOffset.value)}deg`, { duration: 10 }) },
     ]
   }))
 
+  const initialAngle = useSharedValue(0);
   const [centerX, setCenterX] = useState(0)
   const [centerY, setCenterY] = useState(0)
 
   const pan = Gesture.Pan()
     .onBegin((event) => {
-      console.log('begin');
+      const x = event.absoluteX - centerX;
+      const y = event.absoluteY - centerY;
+      initialAngle.value = Math.atan2(y, x) * 180 / Math.PI;
     })
     .onChange((event) => {
-      console.log(event)
-      console.log('change', event.translationX);
+      const x = event.absoluteX - centerX;
+      const y = event.absoluteY - centerY;
+      const currentAngle = Math.atan2(y, x) * 180 / Math.PI;
 
-      systemOffset.value = (event.changeX < 0 ? 1 : -1)  * event.translationX / 3 + (event.changeY < 0 ? -1 : 1) * event.translationY / 3;
+      let diff = currentAngle - initialAngle.value;
+      while (diff < -180) diff += 360;
+      while (diff > 180) diff -= 360;
+      systemOffset.value = diff;
     })
     .onFinalize((event) => {
-      systemRotation.value = systemRotation.value + systemOffset.value;
-      console.log('fin: ', event, systemRotation.value)
-      systemOffset.value = 0;
+      const x = event.absoluteX - centerX;
+      const y = event.absoluteY - centerY;
+      const radius = Math.sqrt(x * x + y * y);
+
+      if (radius > 0) {
+        const velocity =
+          ((event.velocityY * (event.absoluteX - centerX)) - (event.velocityX * (event.absoluteY - centerY))) /
+          (radius * radius);
+
+        const angularVelocity = velocity * (180 / Math.PI);
+
+        systemRotation.value = systemRotation.value + systemOffset.value;
+        systemOffset.value = 0;
+
+        systemRotation.value = withDecay({
+          velocity: angularVelocity,
+          deceleration: 0.995,
+          clamp: [-36000, 36000],
+        });
+      } else {
+        systemRotation.value = systemRotation.value + systemOffset.value;
+        systemOffset.value = 0;
+      }
     });
 
 
@@ -40,8 +66,8 @@ export default function HomeScreen() {
       <View
         onLayout={(event) => {
           const layout = event.nativeEvent.layout;
-          setCenterX(layout.width / 2)
           setCenterY(layout.height / 2)
+          setCenterX(layout.width / 2)
         }}
         style={{
           flex: 1,
@@ -55,6 +81,7 @@ export default function HomeScreen() {
             style={[
               {
                 width: '100%',
+                borderRadius: Math.max(Dimensions.get('screen').height, Dimensions.get('screen').width),
                 height: Dimensions.get('screen').height * 0.5,
                 backgroundColor: 'blue'
               },
@@ -63,13 +90,16 @@ export default function HomeScreen() {
           >
             <Animated.View
               style={[
-                planetStyle,
                 {
                   top: 20,
                   left: '50%',
                 }
               ]}
-            />
+            >
+              <TouchableOpacity onPress={() => console.log('planet 1')}>
+                <View style={planetStyle} />
+              </TouchableOpacity>
+            </Animated.View>
             <Animated.View
               style={[
                 planetStyle,
