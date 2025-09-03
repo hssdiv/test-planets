@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dimensions, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { Dimensions, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withDecay, withTiming } from 'react-native-reanimated';
 
@@ -11,6 +11,12 @@ export default function HomeScreen() {
   const systemAnimation = useAnimatedStyle(() => ({
     transform: [
       { rotateZ: withTiming(`${(systemRotation.value + systemOffset.value)}deg`, { duration: 10 }) },
+    ]
+  }))
+
+  const planetAnimation = useAnimatedStyle(() => ({
+    transform: [
+      { rotateZ: withTiming(`${(-systemRotation.value - systemOffset.value)}deg`, { duration: 10 }) },
     ]
   }))
 
@@ -88,37 +94,57 @@ export default function HomeScreen() {
               systemAnimation,
             ]}
           >
-            <Animated.View
-              style={[
+            <View
+              style={[planetStyle,
                 {
                   top: 20,
                   left: '50%',
-                }
-              ]}
-            >
-              <TouchableOpacity onPress={() => console.log('planet 1')}>
-                <View style={planetStyle} />
-              </TouchableOpacity>
-            </Animated.View>
-            <Animated.View
-              style={[
-                planetStyle,
+                }]}>
+              <Animated.View
+                style={planetAnimation}
+              >
+                <TouchableOpacity
+                  onPress={() => console.log('planet 1')}
+                >
+                  <Text>111</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            </View>
+
+
+            <View
+              style={[planetStyle,
                 {
                   left: 50,
                   top: '50%',
-                }
-              ]}
-            />
-            <Animated.View
-              style={[
-                planetStyle,
-                {
-                  top: '50%',
-                  left: '50%',
-                }
-              ]}
-            />
+                }]}>
+              <Animated.View
+                style={planetAnimation}
+              >
+                <TouchableOpacity
+                  onPress={() => console.log('planet 2')}
+                >
+                  <Text>222</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            </View>
 
+            <View
+              style={[planetStyle,
+                {
+                   top: '50%',
+                  left: '50%',
+                }]}>
+              <Animated.View
+                style={planetAnimation}
+              >
+                <TouchableOpacity
+                  onPress={() => console.log('planet 3')}
+                >
+                  <Text>333</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            </View>
           </Animated.View>
         </GestureDetector>
       </View>
@@ -130,5 +156,7 @@ const planetStyle: ViewStyle = {
   width: 50,
   height: 50,
   borderRadius: 25,
+  alignItems: 'center',
+  justifyContent: 'center',
   backgroundColor: `#${Math.random().toString(16).slice(-6)}`,
 }
