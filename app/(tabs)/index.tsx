@@ -1,75 +1,104 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { Dimensions, View, ViewStyle } from 'react-native';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeScreen() {
+  const systemRotation = useSharedValue(0);
+  const systemOffset = useSharedValue<number>(0);
+
+  const systemAnimation = useAnimatedStyle(() => ({
+    transform: [
+      { rotateZ: withTiming(`${systemRotation.value + systemOffset.value}deg`, { duration: 100 }) },
+      // { scale:}
+    ]
+  }))
+
+  const [centerX, setCenterX] = useState(0)
+  const [centerY, setCenterY] = useState(0)
+
+  const pan = Gesture.Pan()
+    .onBegin((event) => {
+      console.log('begin');
+    })
+    .onChange((event) => {
+      console.log(event)
+      console.log('change', event.translationX);
+
+      systemOffset.value = (event.changeX < 0 ? 1 : -1)  * event.translationX / 3 + (event.changeY < 0 ? -1 : 1) * event.translationY / 3;
+    })
+    .onFinalize((event) => {
+      systemRotation.value = systemRotation.value + systemOffset.value;
+      console.log('fin: ', event, systemRotation.value)
+      systemOffset.value = 0;
+    });
+
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View
+        onLayout={(event) => {
+          const layout = event.nativeEvent.layout;
+          setCenterX(layout.width / 2)
+          setCenterY(layout.height / 2)
+        }}
+        style={{
+          flex: 1,
+          backgroundColor: 'red',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}
+      >
+        <GestureDetector gesture={pan}>
+          <Animated.View
+            style={[
+              {
+                width: '100%',
+                height: Dimensions.get('screen').height * 0.5,
+                backgroundColor: 'blue'
+              },
+              systemAnimation,
+            ]}
+          >
+            <Animated.View
+              style={[
+                planetStyle,
+                {
+                  top: 20,
+                  left: '50%',
+                }
+              ]}
+            />
+            <Animated.View
+              style={[
+                planetStyle,
+                {
+                  left: 50,
+                  top: '50%',
+                }
+              ]}
+            />
+            <Animated.View
+              style={[
+                planetStyle,
+                {
+                  top: '50%',
+                  left: '50%',
+                }
+              ]}
+            />
+
+          </Animated.View>
+        </GestureDetector>
+      </View>
+    </GestureHandlerRootView>
   );
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+const planetStyle: ViewStyle = {
+  width: 50,
+  height: 50,
+  borderRadius: 25,
+  backgroundColor: `#${Math.random().toString(16).slice(-6)}`,
+}
