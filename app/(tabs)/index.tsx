@@ -67,6 +67,44 @@ export default function HomeScreen() {
     });
 
 
+  // function getRotatedPosition(cx: number, cy: number, x: number, y: number, angleDeg: number) {
+  //   const angle = (angleDeg * Math.PI) / 180;
+  //   const dx = x - cx;
+  //   const dy = y - cy;
+  //   const rx = dx * Math.cos(angle) - dy * Math.sin(angle);
+  //   const ry = dx * Math.sin(angle) + dy * Math.cos(angle);
+  //   return { x: cx + rx, y: cy + ry };
+  // }
+
+  // // Example for planet 1 (top center)
+  // const planet1X = centerX;
+  // const planet1Y = 20 + 25; // 20 top + radius
+
+  // const planet1Scale = useDerivedValue(() => {
+  //   const { y } = getRotatedPosition(
+  //     centerX,
+  //     centerY,
+  //     planet1X, // centerX,
+  //     planet1Y, // 20 + 25,
+  //     systemRotation.value + systemOffset.value
+  //   );
+  //   // Interpolate scale: top (min), bottom (max)
+  //   return interpolate(
+  //     y,
+  //     [0, Dimensions.get('screen').height],
+  //     [0.7, 1.2],
+  //     'clamp'
+  //   );
+  // }, [centerX, centerY]);
+
+  // const planet1AnimatedStyle = useAnimatedStyle(() => ({
+  //   transform: [
+  //     { rotateZ: withTiming(`${(-systemRotation.value - systemOffset.value)}deg`, { duration: 10 }) },
+  //     { scale: planet1Scale.value }
+  //   ]
+  // }));
+
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View
@@ -102,6 +140,7 @@ export default function HomeScreen() {
                 }]}>
               <Animated.View
                 style={planetAnimation}
+                // style={[planet1AnimatedStyle]}
               >
                 <TouchableOpacity
                   onPress={() => console.log('planet 1')}
@@ -132,7 +171,7 @@ export default function HomeScreen() {
             <View
               style={[planetStyle,
                 {
-                   top: '50%',
+                  top: '50%',
                   left: '50%',
                 }]}>
               <Animated.View
